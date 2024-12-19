@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from './client';
-import { Table } from '@mantine/core';
-import { format, toZonedTime } from 'date-fns-tz';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "../client";
+import { Button, Table } from "@mantine/core";
+import { format, toZonedTime } from "date-fns-tz";
+import AddEntryModal from "./AddEntryModal";
+import { useDisclosure } from "@mantine/hooks";
 
 interface NestboxData {
   Action: string;
@@ -11,36 +13,40 @@ interface NestboxData {
 }
 
 function Nestbox() {
-  const { BuildingNumber, NestBoxNumber } = useParams<{ BuildingNumber: string; NestBoxNumber: string }>();
+  const { BuildingNumber, NestBoxNumber } = useParams<{
+    BuildingNumber: string;
+    NestBoxNumber: string;
+  }>();
   const [data, setData] = useState<NestboxData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [addEntryModalOpen, addEntryModal] = useDisclosure();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const { data, error } = await supabase
-          .from('NestBoxHistory')
-          .select('Action, CreatedDate, Notes')
-          .eq('Building', BuildingNumber)
-          .eq('Nestbox', NestBoxNumber)
-          .order('CreatedDate', { ascending: false });
-
+          .from("NestBoxHistory")
+          .select("Action, CreatedDate, Notes")
+          .eq("Building", BuildingNumber)
+          .eq("Nestbox", NestBoxNumber)
+          .order("CreatedDate", { ascending: false });
 
         if (error) {
           setError(error.message);
         } else {
           const formattedData = data.map((item: NestboxData) => {
-            const zonedDate = toZonedTime(item.CreatedDate, 'America/New_York');
+            const zonedDate = toZonedTime(item.CreatedDate, "America/New_York");
             return {
               ...item,
-              CreatedDate: format(zonedDate, 'MM-dd-yyyy hh:mm a'),
+              CreatedDate: format(zonedDate, "MM-dd-yyyy hh:mm a"),
             };
           });
           setData(formattedData);
         }
       } catch (error) {
-        setError('An unexpected error occurred');
+        setError("An unexpected error occurred");
       } finally {
         setLoading(false);
       }
@@ -79,8 +85,12 @@ function Nestbox() {
       ) : (
         <p>No data available</p>
       )}
+      <Button onClick={() => navigate("/")}>Go Home</Button>
+      <Button onClick={addEntryModal.open}>Add Entry</Button>
+      <AddEntryModal opened={addEntryModalOpen} onClose={addEntryModal.close} />
     </div>
   );
 }
 
 export default Nestbox;
+

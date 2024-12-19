@@ -1,22 +1,19 @@
 // filepath: /c:/Projects/breed-box/src/AddEntryModal.tsx
-import React, { useState } from 'react';
-import { Modal, Button, TextInput, Textarea } from '@mantine/core';
-import { supabase } from './client';
-import { toZonedTime } from 'date-fns-tz';
+import React, { useState } from "react";
+import { Modal, Button, TextInput, Textarea } from "@mantine/core";
+import { supabase } from "../client";
+import { toZonedTime } from "date-fns-tz";
 
 interface AddEntryModalProps {
   opened: boolean;
   onClose: () => void;
 }
 
-const AddEntryModal: React.FC<AddEntryModalProps> = ({ 
-  opened, 
-  onClose, 
-}) => {
-  const [buildingNumber, setBuildingNumber] = useState('');
-  const [nestboxNumber, setNestboxNumber] = useState('');
-  const [action, setAction] = useState('');
-  const [notes, setNotes] = useState('');
+const AddEntryModal: React.FC<AddEntryModalProps> = ({ opened, onClose }) => {
+  const [buildingNumber, setBuildingNumber] = useState("");
+  const [nestboxNumber, setNestboxNumber] = useState("");
+  const [action, setAction] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,22 +22,25 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.from('NestBoxHistory').insert([
+    const { error } = await supabase.from("NestBoxHistory").insert([
       {
         Building: buildingNumber,
         Nestbox: nestboxNumber,
         Action: action,
         Notes: notes,
-        CreatedDate: toZonedTime(new Date(), 'America/New_York').toLocaleString(),
+        CreatedDate: toZonedTime(
+          new Date(),
+          "America/New_York",
+        ).toLocaleString(),
       },
     ]);
-    
+
     if (error) {
       setError(error.message);
     } else {
       onClose();
     }
-    
+
     setLoading(false);
   };
 
@@ -70,7 +70,7 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({
           value={notes}
           onChange={(e) => setNotes(e.currentTarget.value)}
         />
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
         <Button type="submit" loading={loading}>
           Add Entry
         </Button>
@@ -80,3 +80,4 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({
 };
 
 export default AddEntryModal;
+
