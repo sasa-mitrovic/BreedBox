@@ -1,29 +1,17 @@
 import "@mantine/core/styles.css";
-import { Button, Container, MantineProvider } from "@mantine/core";
+import { Container, MantineProvider } from "@mantine/core";
 import { theme } from "./theme";
-import { useDisclosure } from "@mantine/hooks";
-import AddEntryModal from "./AddEntryModal";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import Nestbox from "./Nestbox";
+import AppRoutes from "./routes";
 
 export default function App() {
-  const [addEntryModalOpen, addEntryModal] = useDisclosure();
-  const navigate = useNavigate();
-
-  const handleNavigate = () => {
-    navigate('/nestbox/1/2'); // Example BuildingNumber and NestBoxNumber
-  };
-  return ( 
+  return (
     <MantineProvider theme={theme}>
       <Container>
-          <Routes>
-            <Route path="/" element={<div>Home</div>} />
-            <Route path="/nestbox/:BuildingNumber/:NestBoxNumber" element={<Nestbox />} />
-          </Routes>
-          <Button onClick={handleNavigate}>Go to Nestbox</Button>
-          <Button onClick={addEntryModal.open}>Add Entry</Button>
-          <AddEntryModal opened={addEntryModalOpen} onClose={addEntryModal.close} />
-        </Container>
+        {/* Main Layout Components Could Go Here */}
+        {/* For example, a NavBar or a Header if needed */}
+
+        <AppRoutes />
+      </Container>
     </MantineProvider>
-  )
+  );
 }
