@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../client";
-import { Button, Table } from "@mantine/core";
+import { Button, Paper, Table } from "@mantine/core";
 import { format, toZonedTime } from "date-fns-tz";
 import AddEntryModal from "./AddEntryModal";
 import { useDisclosure } from "@mantine/hooks";
+import React from "react";
+import { FaSortUp, FaSortDown } from 'react-icons/fa';
 
 interface NestboxData {
   Action: string;
@@ -21,59 +23,101 @@ function Nestbox() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addEntryModalOpen, addEntryModal] = useDisclosure();
+  const [sortConfig, setSortConfig] = useState<{ key: keyof NestboxData; direction: 'ascending' | 'descending' }>({
+    key: 'CreatedDate',
+    direction: 'descending',
+  });
   const navigate = useNavigate();
+  const refreshData = () => fetchData();
+  const fetchData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("NestBoxHistory")
+        .select("Action, CreatedDate, Notes")
+        .eq("Building", BuildingNumber)
+        .eq("Nestbox", NestBoxNumber)
+        .order("CreatedDate", { ascending: false });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        const formattedData = data.map((item: NestboxData) => {
+          const zonedDate = toZonedTime(item.CreatedDate, "America/New_York");
+          return {
+            ...item,
+            CreatedDate: format(zonedDate, "MM-dd-yyyy hh:mm a"),
+          };
+        });
+        setData(formattedData);
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("NestBoxHistory")
-          .select("Action, CreatedDate, Notes")
-          .eq("Building", BuildingNumber)
-          .eq("Nestbox", NestBoxNumber)
-          .order("CreatedDate", { ascending: false });
-
-        if (error) {
-          setError(error.message);
-        } else {
-          const formattedData = data.map((item: NestboxData) => {
-            const zonedDate = toZonedTime(item.CreatedDate, "America/New_York");
-            return {
-              ...item,
-              CreatedDate: format(zonedDate, "MM-dd-yyyy hh:mm a"),
-            };
-          });
-          setData(formattedData);
-        }
-      } catch (error) {
-        setError("An unexpected error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, [BuildingNumber, NestBoxNumber]);
+
+
+  const sortedData = React.useMemo(() => {
+    let sortableData = [...data];
+    if (sortConfig !== null) {
+      sortableData.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableData;
+  }, [data, sortConfig]);
+
+  const requestSort = (key: keyof NestboxData) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  }; 
+
+  const getSortIcon = (key: string) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'ascending' ? <FaSortUp /> : <FaSortDown />;
+    }
+    
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <div>
-      <h1>Nestbox</h1>
-      <p>Building Number: {BuildingNumber}</p>
-      <p>Nest Box Number: {NestBoxNumber}</p>
+    <Paper shadow="lg" style={{ marginTop: 20, padding: 20, border : '10px outset #888' }}>
+      <h1>Building Number: {BuildingNumber}</h1>
+      <h1>Nest Box Number: {NestBoxNumber}</h1>
       {data.length > 0 ? (
-        <Table>
+        <div className="scrollable-table">
+        <Table stickyHeader>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Action</Table.Th>
-              <Table.Th>Created Date</Table.Th>
-              <Table.Th>Notes</Table.Th>
+              <Table.Th className="cursor-pointer" onClick={() => requestSort('Action')}>
+                Action {getSortIcon('Action')}
+              </Table.Th>
+              <Table.Th className="cursor-pointer" onClick={() => requestSort('CreatedDate')}>
+                Created Date {getSortIcon('CreatedDate')}
+              </Table.Th>
+              <Table.Th className="cursor-pointer" onClick={() => requestSort('Notes')}>
+                Notes {getSortIcon('Notes')}
+              </Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {data.map((item, index) => (
+            {sortedData.map((item, index) => (
               <Table.Tr key={index}>
                 <Table.Td>{item.Action}</Table.Td>
                 <Table.Td>{item.CreatedDate}</Table.Td>
@@ -82,13 +126,14 @@ function Nestbox() {
             ))}
           </Table.Tbody>
         </Table>
+      </div>
       ) : (
         <p>No data available</p>
       )}
       <Button onClick={() => navigate("/")}>Go Home</Button>
       <Button onClick={addEntryModal.open}>Add Entry</Button>
-      <AddEntryModal opened={addEntryModalOpen} onClose={addEntryModal.close} />
-    </div>
+      <AddEntryModal opened={addEntryModalOpen} onClose={addEntryModal.close} onSubmit={refreshData}/>
+    </Paper>
   );
 }
 

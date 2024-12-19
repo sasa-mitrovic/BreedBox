@@ -7,9 +7,10 @@ import { toZonedTime } from "date-fns-tz";
 interface AddEntryModalProps {
   opened: boolean;
   onClose: () => void;
+  onSubmit: () => void;
 }
 
-const AddEntryModal: React.FC<AddEntryModalProps> = ({ opened, onClose }) => {
+const AddEntryModal: React.FC<AddEntryModalProps> = ({ opened, onClose, onSubmit }) => {
   const [buildingNumber, setBuildingNumber] = useState("");
   const [nestboxNumber, setNestboxNumber] = useState("");
   const [action, setAction] = useState("");
@@ -40,7 +41,7 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ opened, onClose }) => {
     } else {
       onClose();
     }
-
+    onSubmit();
     setLoading(false);
   };
 
@@ -71,9 +72,11 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ opened, onClose }) => {
           onChange={(e) => setNotes(e.currentTarget.value)}
         />
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <Button type="submit" loading={loading}>
-          Add Entry
-        </Button>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button type="submit" loading={loading}>
+            Add Entry
+          </Button>
+        </div>
       </form>
     </Modal>
   );

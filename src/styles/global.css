@@ -1,0 +1,12 @@
+.mantine-Button-root{
+    margin: 10px 2px 2px 0px;
+}
+
+.scrollable-table {
+    max-height: 400px; /* Set your desired height */
+    overflow-y: auto;
+}
+
+.cursor-pointer {
+cursor: pointer;
+}
