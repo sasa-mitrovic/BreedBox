@@ -41,14 +41,7 @@ function Nestbox() {
       if (error) {
         setError(error.message);
       } else {
-        const formattedData = data.map((item: NestboxData) => {
-          const zonedDate = toZonedTime(item.CreatedDate, "America/New_York");
-          return {
-            ...item,
-            CreatedDate: format(zonedDate, "MM-dd-yyyy hh:mm a"),
-          };
-        });
-        setData(formattedData);
+        setData(data);
       }
     } catch (error) {
       setError("An unexpected error occurred");
@@ -120,7 +113,7 @@ function Nestbox() {
             {sortedData.map((item, index) => (
               <Table.Tr key={index}>
                 <Table.Td>{item.Action}</Table.Td>
-                <Table.Td>{item.CreatedDate}</Table.Td>
+                <Table.Td>{format(toZonedTime(item.CreatedDate, "America/New_York"), "MM-dd-yyyy hh:mm a")}</Table.Td>
                 <Table.Td>{item.Notes}</Table.Td>
               </Table.Tr>
             ))}
